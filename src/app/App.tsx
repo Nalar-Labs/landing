@@ -402,7 +402,9 @@ function HeroSection({ onRefer }: { onRefer: () => void }) {
   }, []);
 
   return (
-    <section ref={ref} className="pt-36 pb-10 text-center px-6">
+    <section ref={ref} className="relative pt-36 pb-10 text-center px-6">
+      <AuroraBackdrop variant="light" />
+      <div className="relative">
       <p className="h-eyebrow inline-block text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-8">
         AI-Native Design &amp; Engineering Studio
       </p>
@@ -434,6 +436,7 @@ function HeroSection({ onRefer }: { onRefer: () => void }) {
         >
           Refer someone
         </button>
+      </div>
       </div>
     </section>
   );
@@ -718,6 +721,32 @@ function ValuesSection() {
   );
 }
 
+/* ─── Aurora backdrop (decorative) ──────────────────────────── */
+function AuroraBackdrop({ variant = "light" }: { variant?: "light" | "dark" }) {
+  const blobs =
+    variant === "light"
+      ? [
+          "left-[8%] top-[10%] w-[42vw] h-[42vw] bg-[radial-gradient(circle_at_center,rgba(8,145,178,0.14),transparent_65%)]",
+          "right-[6%] top-[30%] w-[38vw] h-[38vw] bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.10),transparent_65%)]",
+        ]
+      : [
+          "left-[10%] top-[15%] w-[45vw] h-[45vw] bg-[radial-gradient(circle_at_center,rgba(8,145,178,0.13),transparent_65%)]",
+          "right-[8%] bottom-[10%] w-[40vw] h-[40vw] bg-[radial-gradient(circle_at_center,rgba(147,51,234,0.10),transparent_65%)]",
+        ];
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {blobs.map((b, i) => (
+        <div
+          key={i}
+          className={`absolute rounded-full blur-3xl motion-safe:animate-[auroraDrift_26s_ease-in-out_infinite] ${
+            i === 1 ? "motion-safe:[animation-delay:-13s]" : ""
+          } ${b}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ─── Copy-to-clipboard button ──────────────────────────────── */
 function CopyButton({ value, label, primary = false }: { value: string; label: string; primary?: boolean }) {
   const [copied, setCopied] = useState(false);
@@ -977,8 +1006,9 @@ function ContactSection() {
   }, []);
 
   return (
-    <section id="contact" ref={ref} className="py-32 px-6 bg-[#0d0d0d] text-white">
-      <div className="max-w-4xl mx-auto text-center">
+    <section id="contact" ref={ref} className="relative py-32 px-6 bg-[#0d0d0d] text-white">
+      <AuroraBackdrop variant="dark" />
+      <div className="relative max-w-4xl mx-auto text-center">
         <p className="cta-item text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-white/40 mb-7">
           Work with us
         </p>
