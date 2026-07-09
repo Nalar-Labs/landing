@@ -75,12 +75,6 @@ const VALUES = [
 // Single source of truth for booking (Calendly).
 const CALENDLY_URL = "https://calendly.com/garda4199/30min";
 
-const STATS = [
-  { prefix: "", num: 120, decimals: 0, suffix: "+", label: "Clients Worldwide" },
-  { prefix: "", num: 98, decimals: 0, suffix: "%", label: "Client Retention" },
-  { prefix: "$", num: 2.4, decimals: 1, suffix: "B", label: "Revenue Generated" },
-  { prefix: "", num: 8, decimals: 0, suffix: " yrs", label: "Industry Experience" },
-];
 
 const TEAM = [
   { name: "Amir Khoury", role: "Co-founder & CEO", img: "1507003211169-0a1dd7228f2d" },
@@ -530,65 +524,6 @@ function GlobeSection() {
   );
 }
 
-
-/* ─── Stats bar ─────────────────────────────────────────────── */
-function StatsBar() {
-  const ref = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const mm = gsap.matchMedia(ref);
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-      gsap.from(".stat-item", {
-        opacity: 0,
-        y: 24,
-        duration: 0.75,
-        ease: "power2.out",
-        stagger: 0.1,
-        scrollTrigger: { trigger: ref.current, start: "top 85%" },
-      });
-      gsap.utils.toArray<HTMLElement>(".stat-num").forEach((el) => {
-        const num = parseFloat(el.dataset.num ?? "0");
-        const decimals = parseInt(el.dataset.decimals ?? "0", 10);
-        const prefix = el.dataset.prefix ?? "";
-        const suffix = el.dataset.suffix ?? "";
-        const counter = { v: 0 };
-        gsap.to(counter, {
-          v: num,
-          duration: 1.6,
-          ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 85%", once: true },
-          onUpdate: () => {
-            el.textContent = prefix + counter.v.toFixed(decimals) + suffix;
-          },
-        });
-      });
-    });
-    return () => mm.revert();
-  }, []);
-
-  return (
-    <section ref={ref} className="border-y border-border py-16 px-6">
-      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
-        {STATS.map((s) => (
-          <div key={s.label} className="stat-item text-center">
-            <div
-              className="stat-num font-['Instrument_Serif',serif] text-[clamp(2.4rem,4vw,4rem)] leading-none text-foreground tabular-nums"
-              data-num={s.num}
-              data-decimals={s.decimals}
-              data-prefix={s.prefix}
-              data-suffix={s.suffix}
-            >
-              {s.prefix}{s.num}{s.suffix}
-            </div>
-            <div className="mt-2.5 text-[0.67rem] font-semibold tracking-[0.22em] uppercase text-muted-foreground">
-              {s.label}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 /* ─── Services ──────────────────────────────────────────────── */
 function ServicesSection() {
@@ -1056,7 +991,6 @@ export default function App() {
       <Nav />
       <HeroSection onRefer={() => setReferOpen(true)} />
       <GlobeSection />
-      <StatsBar />
       <ValuesSection />
       <ServicesSection />
       <ReferSection onRefer={() => setReferOpen(true)} />
