@@ -584,6 +584,49 @@ function ServicesSection() {
   );
 }
 
+/* ─── Refer Section ────────────────────────────────────────────── */
+function ReferSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".refer-cta", {
+        opacity: 0,
+        y: 20,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: { trigger: ref.current, start: "top 80%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="refer" ref={ref} className="py-24 px-6 bg-white/40">
+      <div className="max-w-3xl mx-auto text-center">
+        <div className="refer-cta">
+          <p className="text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-6">
+            Growing together
+          </p>
+          <h2 className="font-['Instrument_Serif',serif] text-[clamp(1.8rem,3.5vw,2.8rem)] leading-[1.15] mb-8">
+            Know someone who should work with us?
+          </h2>
+          <p className="text-[0.9rem] text-muted-foreground mb-10 max-w-lg mx-auto">
+            If you know a business that needs help building software infrastructure they own, we'd love to hear about them. Let's start a conversation.
+          </p>
+          <a
+            href="mailto:hello@nalarlabs.com?subject=Referral"
+            className="inline-flex items-center gap-2.5 bg-foreground text-background px-8 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity"
+          >
+            Suggest a referral
+            <ArrowRight size={14} />
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Team ──────────────────────────────────────────────────── */
 function TeamSection() {
   const ref = useRef<HTMLElement>(null);
@@ -699,6 +742,7 @@ export default function App() {
       <GlobeSection />
       <StatsBar />
       <ServicesSection />
+      <ReferSection />
       <TeamSection />
       <ContactSection />
       <Footer />
