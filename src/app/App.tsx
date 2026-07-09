@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -76,8 +76,44 @@ function fibPoints(n: number): THREE.Vector3[] {
 }
 
 /* ─── Globe component ───────────────────────────────────────── */
-function Globe() {
+type GlobeHandle = {
+  enter: () => void;
+  exit: () => void;
+};
+
+const Globe = forwardRef<GlobeHandle, {}>((_, ref) => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const stateRef = useRef<{
+    camera?: THREE.PerspectiveCamera;
+    inGlobe?: boolean;
+  }>({});
+
+  useImperativeHandle(ref, () => ({
+    enter: () => {
+      const state = stateRef.current;
+      if (!state.camera || state.inGlobe) return;
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      state.inGlobe = true;
+      gsap.to(state.camera.position, {
+        x: 0, y: 0, z: 0.1,
+        duration: prefersReduced ? 0 : 1.8,
+        ease: "power2.inOut",
+        overwrite: "auto",
+      });
+    },
+    exit: () => {
+      const state = stateRef.current;
+      if (!state.camera || !state.inGlobe) return;
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      state.inGlobe = false;
+      gsap.to(state.camera.position, {
+        x: 0, y: 1.6, z: 7.8,
+        duration: prefersReduced ? 0 : 1.8,
+        ease: "power2.inOut",
+        overwrite: "auto",
+      });
+    },
+  }));
 
   useEffect(() => {
     const el = mountRef.current;
@@ -86,132 +122,136 @@ function Globe() {
     const W = el.clientWidth;
     const H = el.clientHeight;
 
-    /* Scene */
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 100);
-    camera.position.set(0, 1.6, 7.8);
-    camera.lookAt(0, 0, 0);
+    try {
+      /* Scene */
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 100);
+      camera.position.set(0, 1.6, 7.8);
+      camera.lookAt(0, 0, 0);
+      stateRef.current.camera = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(W, H);
-    renderer.setClearColor(0, 0);
-    el.appendChild(renderer.domElement);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(W, H);
+      renderer.setClearColor(0, 0);
+      el.appendChild(renderer.domElement);
 
-    /* Globe group */
-    const glob = new THREE.Group();
-    scene.add(glob);
+      /* Globe group */
+      const glob = new THREE.Group();
+      scene.add(glob);
 
-    /* Subtle wireframe lattice */
-    const wireMat = new THREE.MeshBasicMaterial({
-      color: 0x222222,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.045,
-    });
-    glob.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R, 30, 18), wireMat));
+      /* Subtle wireframe lattice */
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0x222222,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.045,
+      });
+      glob.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R, 30, 18), wireMat));
 
-    /* Image cards */
-    const loader = new THREE.TextureLoader();
-    const pts = fibPoints(PORTFOLIO.length);
+      /* Image cards */
+      const loader = new THREE.TextureLoader();
+      const pts = fibPoints(PORTFOLIO.length);
 
-    PORTFOLIO.forEach((item, i) => {
-      const pos = pts[i];
-      const url = `https://images.unsplash.com/photo-${item.img}?w=420&h=280&fit=crop&auto=format`;
+      PORTFOLIO.forEach((item, i) => {
+        const pos = pts[i];
+        const url = `https://images.unsplash.com/photo-${item.img}?w=420&h=280&fit=crop&auto=format`;
 
-      const placeCard = (tex?: THREE.Texture) => {
-        const mat = tex
-          ? new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
-          : new THREE.MeshBasicMaterial({
-              color: new THREE.Color().setHSL((i / PORTFOLIO.length) * 0.85, 0.45, 0.62),
-              side: THREE.DoubleSide,
-            });
+        const placeCard = (tex?: THREE.Texture) => {
+          const mat = tex
+            ? new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+            : new THREE.MeshBasicMaterial({
+                color: new THREE.Color().setHSL((i / PORTFOLIO.length) * 0.85, 0.45, 0.62),
+                side: THREE.DoubleSide,
+              });
 
-        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), mat);
-        mesh.position.copy(pos);
+          const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), mat);
+          mesh.position.copy(pos);
+          mesh.lookAt(pos.clone().multiplyScalar(2));
+          mesh.rotateZ(TILT_OFFSETS[i % TILT_OFFSETS.length]);
+          glob.add(mesh);
+        };
 
-        /* Face outward — lookAt a point twice as far along the radial direction */
-        mesh.lookAt(pos.clone().multiplyScalar(2));
+        loader.load(
+          url,
+          (tex) => { tex.colorSpace = THREE.SRGBColorSpace; placeCard(tex); },
+          undefined,
+          () => placeCard(),
+        );
+      });
 
-        /* Slight random tilt for the scattered-card aesthetic */
-        mesh.rotateZ(TILT_OFFSETS[i % TILT_OFFSETS.length]);
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let dragging = false;
+      const ROT_SPEED = (Math.PI * 2) / 140; // radians / second
 
-        glob.add(mesh);
+      const autoRotate = (_: number, dt: number) => {
+        if (!dragging && !stateRef.current.inGlobe) {
+          glob.rotation.y += ROT_SPEED * (dt / 1000); // dt is in milliseconds
+        }
+      };
+      if (!prefersReduced) gsap.ticker.add(autoRotate);
+
+      if (!prefersReduced) {
+        gsap.from(glob.scale, { x: 0.72, y: 0.72, z: 0.72, duration: 1.6, ease: "power3.out", delay: 0.3 });
+      }
+
+      /* Render loop */
+      let raf: number;
+      const tick = () => { raf = requestAnimationFrame(tick); renderer.render(scene, camera); };
+      tick();
+
+      /* Pointer drag */
+      let ox = 0, oy = 0;
+      const onPD = (e: PointerEvent) => {
+        dragging = true;
+        ox = e.clientX; oy = e.clientY;
+        renderer.domElement.setPointerCapture(e.pointerId);
+        el.style.cursor = "grabbing";
       };
 
-      loader.load(
-        url,
-        (tex) => { tex.colorSpace = THREE.SRGBColorSpace; placeCard(tex); },
-        undefined,
-        () => placeCard(),
-      );
-    });
+      const onPM = (e: PointerEvent) => {
+        if (!dragging) return;
+        glob.rotation.y += (e.clientX - ox) * 0.006;
+        glob.rotation.x = Math.max(-0.65, Math.min(0.65, glob.rotation.x + (e.clientY - oy) * 0.003));
+        ox = e.clientX; oy = e.clientY;
+      };
 
-    /* GSAP ticker for smooth, frame-rate-independent auto-rotation */
-    let dragging = false;
-    const ROT_SPEED = (Math.PI * 2) / 38; // radians / second
+      const onPU = () => {
+        dragging = false;
+        el.style.cursor = "grab";
+        gsap.to(glob.rotation, { x: 0, duration: 1.2, ease: "power2.out" });
+      };
 
-    const autoRotate = (_: number, dt: number) => {
-      if (!dragging) glob.rotation.y += ROT_SPEED * dt;
-    };
-    gsap.ticker.add(autoRotate);
+      renderer.domElement.addEventListener("pointerdown", onPD);
+      renderer.domElement.addEventListener("pointermove", onPM);
+      renderer.domElement.addEventListener("pointerup", onPU);
+      renderer.domElement.addEventListener("pointerleave", onPU);
 
-    /* Globe entrance */
-    gsap.from(glob.scale, { x: 0.72, y: 0.72, z: 0.72, duration: 1.6, ease: "power3.out", delay: 0.3 });
+      /* Resize */
+      const onResize = () => {
+        const nW = el.clientWidth, nH = el.clientHeight;
+        renderer.setSize(nW, nH);
+        camera.aspect = nW / nH;
+        camera.updateProjectionMatrix();
+      };
+      window.addEventListener("resize", onResize);
 
-    /* Render loop */
-    let raf: number;
-    const tick = () => { raf = requestAnimationFrame(tick); renderer.render(scene, camera); };
-    tick();
-
-    /* Pointer drag */
-    let ox = 0, oy = 0;
-    const onPD = (e: PointerEvent) => {
-      dragging = true;
-      ox = e.clientX; oy = e.clientY;
-      renderer.domElement.setPointerCapture(e.pointerId);
-      el.style.cursor = "grabbing";
-    };
-
-    const onPM = (e: PointerEvent) => {
-      if (!dragging) return;
-      glob.rotation.y += (e.clientX - ox) * 0.006;
-      glob.rotation.x = Math.max(-0.65, Math.min(0.65, glob.rotation.x + (e.clientY - oy) * 0.003));
-      ox = e.clientX; oy = e.clientY;
-    };
-
-    const onPU = () => {
-      dragging = false;
-      el.style.cursor = "grab";
-      /* Smooth snap-back of x tilt with GSAP */
-      gsap.to(glob.rotation, { x: 0, duration: 1.2, ease: "power2.out" });
-    };
-
-    renderer.domElement.addEventListener("pointerdown", onPD);
-    renderer.domElement.addEventListener("pointermove", onPM);
-    renderer.domElement.addEventListener("pointerup", onPU);
-    renderer.domElement.addEventListener("pointerleave", onPU);
-
-    /* Resize */
-    const onResize = () => {
-      const nW = el.clientWidth, nH = el.clientHeight;
-      renderer.setSize(nW, nH);
-      camera.aspect = nW / nH;
-      camera.updateProjectionMatrix();
-    };
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      gsap.ticker.remove(autoRotate);
-      renderer.domElement.removeEventListener("pointerdown", onPD);
-      renderer.domElement.removeEventListener("pointermove", onPM);
-      renderer.domElement.removeEventListener("pointerup", onPU);
-      renderer.domElement.removeEventListener("pointerleave", onPU);
-      window.removeEventListener("resize", onResize);
-      renderer.dispose();
-      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
-    };
+      return () => {
+        cancelAnimationFrame(raf);
+        if (!prefersReduced) gsap.ticker.remove(autoRotate);
+        renderer.domElement.removeEventListener("pointerdown", onPD);
+        renderer.domElement.removeEventListener("pointermove", onPM);
+        renderer.domElement.removeEventListener("pointerup", onPU);
+        renderer.domElement.removeEventListener("pointerleave", onPU);
+        window.removeEventListener("resize", onResize);
+        renderer.dispose();
+        if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+      };
+    } catch (err) {
+      console.error("WebGL initialization failed:", err);
+      if (el) el.innerHTML = "<p className='text-center py-20 text-muted-foreground'>3D globe requires WebGL support.</p>";
+      return () => {};
+    }
   }, []);
 
   return (
@@ -221,7 +261,7 @@ function Globe() {
       style={{ cursor: "grab" }}
     />
   );
-}
+});
 
 /* ─── Nav ───────────────────────────────────────────────────── */
 function Nav() {
