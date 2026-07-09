@@ -227,10 +227,11 @@
   html.custom-cursor a,
   html.custom-cursor button,
   html.custom-cursor [role="button"],
-  html.custom-cursor label,
-  html.custom-cursor canvas {
+  html.custom-cursor label {
     cursor: none;
   }
+  /* Note: <canvas> is intentionally excluded so the Globe's native
+     grab/grabbing cursor affordance survives while dragging. */
 }
 
 @keyframes auroraDrift {
@@ -239,9 +240,6 @@
   66% { transform: translate(-5%, 4%) scale(0.95); }
   100% { transform: translate(0, 0) scale(1); }
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .motion-safe\:animate-\[auroraDrift_26s_ease-in-out_infinite\] {
-    animation: auroraDrift 26s ease-in-out infinite;
-  }
-}
+/* The auroraDrift animation is applied via Tailwind's
+   `motion-safe:animate-[...]` utility on AuroraBackdrop, which already
+   emits the prefers-reduced-motion:no-preference gate — no manual rule needed. */
