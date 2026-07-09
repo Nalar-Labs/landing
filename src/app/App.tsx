@@ -1,0 +1,593 @@
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowRight, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* ─── Constants ─────────────────────────────────────────────── */
+const SPHERE_R = 2.85;
+const CARD_W = 0.88;
+const CARD_H = CARD_W * 0.64;
+const TILT_OFFSETS = [0.13, -0.19, 0.22, -0.09, 0.07, -0.21, 0.16, -0.06, 0.11, -0.14,
+                      0.19, -0.08, 0.06, -0.17, 0.13, -0.04, 0.09, -0.11, 0.15, -0.07];
+
+/* ─── Data ──────────────────────────────────────────────────── */
+const PORTFOLIO = [
+  { img: "1551288049-bebda4e38f71", title: "Analytics Platform", client: "TechCorp" },
+  { img: "1460925895917-afdab827c52f", title: "FinTech Suite", client: "Meridian Bank" },
+  { img: "1498050108023-c5249f4df085", title: "Dev Platform", client: "CloudBase" },
+  { img: "1555066931-4365d14bab8c", title: "AI Engine", client: "NeuralStack" },
+  { img: "1518770660439-4636190af475", title: "IoT Dashboard", client: "Artix Labs" },
+  { img: "1504868584819-f8e8b4b6d7e3", title: "Workspace OS", client: "FlowHQ" },
+  { img: "1531297484001-80022131f5a1", title: "Mobile App", client: "Stride Health" },
+  { img: "1552664730-d307ca884978", title: "Brand Strategy", client: "Lumien" },
+  { img: "1541701494587-cb58502866ab", title: "Creative System", client: "Nova Studio" },
+  { img: "1558591710-4b4a1ae0f435", title: "Visual Identity", client: "Axiom" },
+  { img: "1561070791-2526d30994b5", title: "UX Research", client: "Helios" },
+  { img: "1509395176047-4a66953fd231", title: "Digital Art", client: "Prism" },
+  { img: "1526374965328-7f61d4dc18c5", title: "Security Platform", client: "Vault" },
+  { img: "1556742049-0cfed4f6a45d", title: "SaaS Dashboard", client: "Operix" },
+  { img: "1551434678-e076c223a692", title: "Engineering Hub", client: "Buildforce" },
+  { img: "1497366216548-37526070297c", title: "Office Platform", client: "SpaceWell" },
+  { img: "1542744094-3a31f272c490", title: "Data Science", client: "Insight Co" },
+  { img: "1526256262350-7da7584cf5eb", title: "Product Design", client: "Orbit" },
+  { img: "1524758631624-e2822132978", title: "Interior Tech", client: "Habitat AI" },
+  { img: "1571019613454-1cb2f99b2d8b", title: "Health Tech", client: "Vitals AI" },
+];
+
+const SERVICES = [
+  { icon: Layers, name: "AI Product Design", desc: "Craft intuitive AI-native experiences from zero to launch." },
+  { icon: Code2, name: "Engineering & Dev", desc: "Full-stack AI systems designed to perform and scale." },
+  { icon: Palette, name: "Brand Identity", desc: "Visual systems built to resonate in the AI era." },
+  { icon: Microscope, name: "UX Research", desc: "Evidence-based design that puts real users first." },
+  { icon: Cpu, name: "AI Integration", desc: "Embedding intelligence into your existing workflows." },
+  { icon: FlaskConical, name: "Design Systems", desc: "Scalable, composable component architectures." },
+];
+
+const STATS = [
+  { value: "120+", label: "Clients Worldwide" },
+  { value: "98%", label: "Client Retention" },
+  { value: "$2.4B", label: "Revenue Generated" },
+  { value: "8 yrs", label: "Industry Experience" },
+];
+
+const TEAM = [
+  { name: "Amir Khoury", role: "Co-founder & CEO", img: "1507003211169-0a1dd7228f2d" },
+  { name: "Leila Chen", role: "Head of Design", img: "1494790108377-be9c29b29330" },
+  { name: "Marcus Reid", role: "Lead Engineer", img: "1472099645785-5658abf4ff4e" },
+  { name: "Zara Osei", role: "AI Research Lead", img: "1580489944761-15a19d654956" },
+];
+
+/* ─── Globe helpers ─────────────────────────────────────────── */
+function fibPoints(n: number): THREE.Vector3[] {
+  const phi = Math.PI * (3 - Math.sqrt(5));
+  return Array.from({ length: n }, (_, i) => {
+    const y = 1 - (i / (n - 1)) * 2;
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    const t = phi * i;
+    return new THREE.Vector3(
+      Math.cos(t) * r * SPHERE_R,
+      y * SPHERE_R,
+      Math.sin(t) * r * SPHERE_R,
+    );
+  });
+}
+
+/* ─── Globe component ───────────────────────────────────────── */
+function Globe() {
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = mountRef.current;
+    if (!el) return;
+
+    const W = el.clientWidth;
+    const H = el.clientHeight;
+
+    /* Scene */
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 100);
+    camera.position.set(0, 1.6, 7.8);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    renderer.setClearColor(0, 0);
+    el.appendChild(renderer.domElement);
+
+    /* Globe group */
+    const glob = new THREE.Group();
+    scene.add(glob);
+
+    /* Subtle wireframe lattice */
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0x222222,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.045,
+    });
+    glob.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R, 30, 18), wireMat));
+
+    /* Image cards */
+    const loader = new THREE.TextureLoader();
+    const pts = fibPoints(PORTFOLIO.length);
+
+    PORTFOLIO.forEach((item, i) => {
+      const pos = pts[i];
+      const url = `https://images.unsplash.com/photo-${item.img}?w=420&h=280&fit=crop&auto=format`;
+
+      const placeCard = (tex?: THREE.Texture) => {
+        const mat = tex
+          ? new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+          : new THREE.MeshBasicMaterial({
+              color: new THREE.Color().setHSL((i / PORTFOLIO.length) * 0.85, 0.45, 0.62),
+              side: THREE.DoubleSide,
+            });
+
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), mat);
+        mesh.position.copy(pos);
+
+        /* Face outward — lookAt a point twice as far along the radial direction */
+        mesh.lookAt(pos.clone().multiplyScalar(2));
+
+        /* Slight random tilt for the scattered-card aesthetic */
+        mesh.rotateZ(TILT_OFFSETS[i % TILT_OFFSETS.length]);
+
+        glob.add(mesh);
+      };
+
+      loader.load(
+        url,
+        (tex) => { tex.colorSpace = THREE.SRGBColorSpace; placeCard(tex); },
+        undefined,
+        () => placeCard(),
+      );
+    });
+
+    /* GSAP ticker for smooth, frame-rate-independent auto-rotation */
+    let dragging = false;
+    const ROT_SPEED = (Math.PI * 2) / 38; // radians / second
+
+    const autoRotate = (_: number, dt: number) => {
+      if (!dragging) glob.rotation.y += ROT_SPEED * dt;
+    };
+    gsap.ticker.add(autoRotate);
+
+    /* Globe entrance */
+    gsap.from(glob.scale, { x: 0.72, y: 0.72, z: 0.72, duration: 1.6, ease: "power3.out", delay: 0.3 });
+
+    /* Render loop */
+    let raf: number;
+    const tick = () => { raf = requestAnimationFrame(tick); renderer.render(scene, camera); };
+    tick();
+
+    /* Pointer drag */
+    let ox = 0, oy = 0;
+    const onPD = (e: PointerEvent) => {
+      dragging = true;
+      ox = e.clientX; oy = e.clientY;
+      renderer.domElement.setPointerCapture(e.pointerId);
+      el.style.cursor = "grabbing";
+    };
+
+    const onPM = (e: PointerEvent) => {
+      if (!dragging) return;
+      glob.rotation.y += (e.clientX - ox) * 0.006;
+      glob.rotation.x = Math.max(-0.65, Math.min(0.65, glob.rotation.x + (e.clientY - oy) * 0.003));
+      ox = e.clientX; oy = e.clientY;
+    };
+
+    const onPU = () => {
+      dragging = false;
+      el.style.cursor = "grab";
+      /* Smooth snap-back of x tilt with GSAP */
+      gsap.to(glob.rotation, { x: 0, duration: 1.2, ease: "power2.out" });
+    };
+
+    renderer.domElement.addEventListener("pointerdown", onPD);
+    renderer.domElement.addEventListener("pointermove", onPM);
+    renderer.domElement.addEventListener("pointerup", onPU);
+    renderer.domElement.addEventListener("pointerleave", onPU);
+
+    /* Resize */
+    const onResize = () => {
+      const nW = el.clientWidth, nH = el.clientHeight;
+      renderer.setSize(nW, nH);
+      camera.aspect = nW / nH;
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      gsap.ticker.remove(autoRotate);
+      renderer.domElement.removeEventListener("pointerdown", onPD);
+      renderer.domElement.removeEventListener("pointermove", onPM);
+      renderer.domElement.removeEventListener("pointerup", onPU);
+      renderer.domElement.removeEventListener("pointerleave", onPU);
+      window.removeEventListener("resize", onResize);
+      renderer.dispose();
+      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={mountRef}
+      className="w-full h-[720px] select-none"
+      style={{ cursor: "grab" }}
+    />
+  );
+}
+
+/* ─── Nav ───────────────────────────────────────────────────── */
+function Nav() {
+  const [open, setOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const trigger = ScrollTrigger.create({
+      start: "top -60",
+      onUpdate: (self) => {
+        navRef.current?.classList.toggle("shadow-sm", self.scroll() > 60);
+      },
+    });
+    return () => trigger.kill();
+  }, []);
+
+  const links = [
+    { label: "Portfolio", href: "#globe" },
+    { label: "Services", href: "#services" },
+    { label: "Team", href: "#team" },
+  ];
+
+  return (
+    <nav
+      ref={navRef}
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5 bg-[#fafaf8]/90 backdrop-blur-md transition-shadow duration-300"
+    >
+      <span className="font-['Instrument_Serif',serif] text-[1.65rem] tracking-tight text-foreground">
+        Nalar Labs
+      </span>
+
+      {/* Pill nav */}
+      <div className="hidden md:flex items-center gap-0.5 bg-[#e6e4df] rounded-full px-2 py-1.5">
+        {links.map((l) => (
+          <a
+            key={l.label}
+            href={l.href}
+            className="px-5 py-2 text-[0.82rem] font-medium text-black/65 hover:text-black hover:bg-white/70 rounded-full transition-all duration-200"
+          >
+            {l.label}
+          </a>
+        ))}
+        <a
+          href="#contact"
+          className="ml-1 px-5 py-2 text-[0.82rem] font-medium bg-black text-white rounded-full hover:bg-neutral-800 transition-colors duration-200"
+        >
+          Contact Us
+        </a>
+      </div>
+
+      {/* Mobile toggle */}
+      <button
+        className="md:hidden p-1 rounded hover:bg-black/5"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Toggle menu"
+      >
+        {open ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 bg-[#fafaf8] border-t border-border px-8 py-6 flex flex-col gap-5 md:hidden shadow-lg">
+          {links.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              className="text-base font-medium"
+              onClick={() => setOpen(false)}
+            >
+              {l.label}
+            </a>
+          ))}
+          <a href="#contact" className="text-base font-medium" onClick={() => setOpen(false)}>
+            Contact Us
+          </a>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+/* ─── Hero ──────────────────────────────────────────────────── */
+function HeroSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".h-item", {
+        opacity: 0,
+        y: 44,
+        duration: 1.05,
+        ease: "power3.out",
+        stagger: 0.12,
+        delay: 0.15,
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section ref={ref} className="pt-36 pb-10 text-center px-6">
+      <p className="h-item inline-block text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-8">
+        AI-Native Design &amp; Engineering Studio
+      </p>
+
+      <h1 className="h-item font-['Instrument_Serif',serif] text-[clamp(2.6rem,5.2vw,5.4rem)] leading-[1.07] text-foreground max-w-5xl mx-auto">
+        {"We're a world class team of AI-Native"}
+        <br className="hidden sm:block" />
+        {" Designers & Engineers"}
+      </h1>
+
+      <p className="h-item mt-5 font-['Instrument_Serif',serif] italic text-[clamp(1.15rem,2.2vw,1.9rem)] text-muted-foreground">
+        Ready to help you &amp; your business evolve
+      </p>
+
+      <div className="h-item mt-11 flex flex-wrap justify-center gap-4">
+        <a
+          href="#globe"
+          className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity"
+        >
+          View our work
+          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+        </a>
+        <a
+          href="#services"
+          className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors"
+        >
+          Our services
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Globe section ─────────────────────────────────────────── */
+function GlobeSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".globe-label", {
+        opacity: 0,
+        y: 12,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: { trigger: ref.current, start: "top 85%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="globe" ref={ref} className="relative -mt-2 overflow-hidden">
+      <p className="globe-label text-center text-[0.68rem] font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-1 pt-2">
+        Drag to explore · {PORTFOLIO.length} projects worldwide
+      </p>
+      <Globe />
+      {/* Fade-out gradient at bottom to suggest depth */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#fafaf8] to-transparent" />
+    </section>
+  );
+}
+
+/* ─── Stats bar ─────────────────────────────────────────────── */
+function StatsBar() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".stat-item", {
+        opacity: 0,
+        y: 24,
+        duration: 0.75,
+        ease: "power2.out",
+        stagger: 0.1,
+        scrollTrigger: { trigger: ref.current, start: "top 85%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section ref={ref} className="border-y border-border py-16 px-6">
+      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+        {STATS.map((s) => (
+          <div key={s.label} className="stat-item text-center">
+            <div className="font-['Instrument_Serif',serif] text-[clamp(2.4rem,4vw,4rem)] leading-none text-foreground">
+              {s.value}
+            </div>
+            <div className="mt-2.5 text-[0.67rem] font-semibold tracking-[0.22em] uppercase text-muted-foreground">
+              {s.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Services ──────────────────────────────────────────────── */
+function ServicesSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".svc-card", {
+        opacity: 0,
+        y: 30,
+        duration: 0.72,
+        ease: "power2.out",
+        stagger: 0.08,
+        scrollTrigger: { trigger: ref.current, start: "top 78%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="services" ref={ref} className="py-28 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-18">
+          <p className="text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-4">
+            What we do
+          </p>
+          <h2 className="font-['Instrument_Serif',serif] text-[clamp(2rem,4vw,3.6rem)] leading-[1.1] max-w-lg">
+            Services built for the intelligence age
+          </h2>
+        </div>
+
+        <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
+          {SERVICES.map((s) => (
+            <div
+              key={s.name}
+              className="svc-card group bg-[#fafaf8] p-9 hover:bg-white transition-colors duration-200"
+            >
+              <s.icon size={20} className="text-muted-foreground mb-7" strokeWidth={1.5} />
+              <h3 className="font-['Instrument_Serif',serif] text-xl mb-3 text-foreground">{s.name}</h3>
+              <p className="text-[0.83rem] text-muted-foreground leading-relaxed">{s.desc}</p>
+              <div className="mt-7 flex items-center gap-2 text-[0.78rem] font-semibold tracking-wide opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all duration-200">
+                Learn more <ArrowRight size={13} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Team ──────────────────────────────────────────────────── */
+function TeamSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".team-card", {
+        opacity: 0,
+        y: 34,
+        duration: 0.85,
+        ease: "power2.out",
+        stagger: 0.11,
+        scrollTrigger: { trigger: ref.current, start: "top 78%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="team" ref={ref} className="py-28 px-6 bg-[#f2f0eb]">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-16">
+          <p className="text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-4">
+            The team
+          </p>
+          <h2 className="font-['Instrument_Serif',serif] text-[clamp(2rem,4vw,3.6rem)] leading-[1.1] max-w-xl">
+            World-class minds, one shared vision
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          {TEAM.map((t) => (
+            <div key={t.name} className="team-card group">
+              <div className="aspect-[3/4] bg-[#d8d5ce] overflow-hidden mb-4">
+                <img
+                  src={`https://images.unsplash.com/photo-${t.img}?w=400&h=530&fit=crop&auto=format`}
+                  alt={t.name}
+                  className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+                />
+              </div>
+              <h3 className="font-['Instrument_Serif',serif] text-lg leading-snug">{t.name}</h3>
+              <p className="text-[0.78rem] text-muted-foreground mt-1">{t.role}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Contact ───────────────────────────────────────────────── */
+function ContactSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".cta-item", {
+        opacity: 0,
+        y: 30,
+        duration: 0.9,
+        ease: "power3.out",
+        stagger: 0.12,
+        scrollTrigger: { trigger: ref.current, start: "top 80%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="contact" ref={ref} className="py-32 px-6 bg-[#0d0d0d] text-white">
+      <div className="max-w-4xl mx-auto text-center">
+        <p className="cta-item text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-white/40 mb-7">
+          Work with us
+        </p>
+        <h2 className="cta-item font-['Instrument_Serif',serif] text-[clamp(2.4rem,5vw,5rem)] leading-[1.08] mb-10">
+          {"Let's build something extraordinary together"}
+        </h2>
+        <a
+          href="mailto:hello@nalarlabs.com"
+          className="cta-item group inline-flex items-center gap-3 border border-white/25 px-11 py-4.5 text-[0.82rem] font-medium tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
+        >
+          hello@nalarlabs.com
+          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Footer ────────────────────────────────────────────────── */
+function Footer() {
+  return (
+    <footer className="bg-[#0d0d0d] border-t border-white/10 px-8 py-8">
+      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+        <span className="font-['Instrument_Serif',serif] text-white text-xl">Nalar Labs</span>
+        <span className="text-white/35 text-xs">© 2025 Nalar Labs. All rights reserved.</span>
+        <div className="flex gap-6 text-xs text-white/35">
+          {["Privacy", "Terms", "Twitter", "LinkedIn"].map((l) => (
+            <a key={l} href="#" className="hover:text-white/70 transition-colors">{l}</a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ─── App ───────────────────────────────────────────────────── */
+export default function App() {
+  return (
+    <main className="bg-[#fafaf8] min-h-screen overflow-x-hidden">
+      <Nav />
+      <HeroSection />
+      <GlobeSection />
+      <StatsBar />
+      <ServicesSection />
+      <TeamSection />
+      <ContactSection />
+      <Footer />
+    </main>
+  );
+}
