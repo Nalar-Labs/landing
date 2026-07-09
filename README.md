@@ -1,11 +1,27 @@
+# Nalar Labs — Landing Page
 
-  # Create interactive landing page
+Marketing landing page for Nalar Labs, an AI implementation consulting studio. Built with React, Vite, Tailwind CSS, GSAP, and Three.js (the portfolio globe in the hero).
 
-  This is a code bundle for Create interactive landing page. The original project is available at https://www.figma.com/design/AhpyMJo23e4gWmW23Aezp4/Create-interactive-landing-page.
+Repository: https://github.com/Nalar-Labs/landing
 
-  ## Running the code
+## Requirements
 
-  Run `npm i` to install the dependencies.
+- Node.js >= 18.18
 
-  Run `npm run dev` to start the development server.
-  
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Production build
+
+```bash
+npm run build   # type-checks then builds to dist/
+npm run preview # serve the production build locally
+```
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for a comparison of hosting options (Netlify, Vercel, Cloudflare Pages, GitHub Pages, plain static hosting) and step-by-step instructions.
