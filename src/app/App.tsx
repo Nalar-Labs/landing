@@ -5,6 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight, Copy, Check, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
 import { Modal } from "./components/Modal";
 import { Cursor } from "./components/Cursor";
+import { splitWords } from "./lib/animation";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -381,50 +382,55 @@ function Nav() {
 /* ─── Hero ──────────────────────────────────────────────────── */
 function HeroSection({ onRefer }: { onRefer: () => void }) {
   const ref = useRef<HTMLElement>(null);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(".h-item", {
-        opacity: 0,
-        y: 44,
-        duration: 1.05,
-        ease: "power3.out",
-        stagger: 0.12,
-        delay: 0.15,
-      });
-    }, ref);
-    return () => ctx.revert();
+    const mm = gsap.matchMedia(ref);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const words = headlineRef.current ? splitWords(headlineRef.current) : [];
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.from(".h-eyebrow", { opacity: 0, y: 18, duration: 0.7 }, 0.1)
+        .from(words, { yPercent: 120, duration: 0.9, stagger: 0.05 }, 0.25)
+        .from(".h-sub", { opacity: 0, y: 20, duration: 0.8 }, 0.8)
+        .from(
+          ".h-cta",
+          { opacity: 0, y: 24, duration: 0.7, ease: "back.out(1.6)", stagger: 0.09, clearProps: "all" },
+          1.0,
+        );
+    });
+    return () => mm.revert();
   }, []);
 
   return (
     <section ref={ref} className="pt-36 pb-10 text-center px-6">
-      <p className="h-item inline-block text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-8">
+      <p className="h-eyebrow inline-block text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-8">
         AI-Native Design &amp; Engineering Studio
       </p>
 
-      <h1 className="h-item font-['Instrument_Serif',serif] text-[clamp(2.6rem,5.2vw,5.4rem)] leading-[1.07] text-foreground max-w-5xl mx-auto">
-        {"We're a world class team of AI-Native"}
-        <br className="hidden sm:block" />
-        {" Designers & Engineers"}
+      <h1
+        ref={headlineRef}
+        className="font-['Instrument_Serif',serif] text-[clamp(2.6rem,5.2vw,5.4rem)] leading-[1.07] text-foreground max-w-5xl mx-auto"
+      >
+        {"We're a world class team of AI-Native Designers & Engineers"}
       </h1>
 
-      <p className="h-item mt-5 font-['Instrument_Serif',serif] italic text-[clamp(1.15rem,2.2vw,1.9rem)] text-muted-foreground">
+      <p className="h-sub mt-5 font-['Instrument_Serif',serif] italic text-[clamp(1.15rem,2.2vw,1.9rem)] text-muted-foreground">
         Ready to help you &amp; your business evolve
       </p>
 
-      <div className="h-item mt-11 flex flex-wrap justify-center gap-4">
+      <div className="mt-11 flex flex-wrap justify-center gap-4">
         <a
           href={CALENDLY_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
+          className="h-cta group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
         >
           Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </a>
         <button
           onClick={onRefer}
-          className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
+          className="h-cta inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
         >
           Refer someone
         </button>
