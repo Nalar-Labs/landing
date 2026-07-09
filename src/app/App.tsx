@@ -379,7 +379,7 @@ function Nav() {
 }
 
 /* ─── Hero ──────────────────────────────────────────────────── */
-function HeroSection() {
+function HeroSection({ onBookCall, onRefer }: { onBookCall: () => void; onRefer: () => void }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -413,19 +413,19 @@ function HeroSection() {
       </p>
 
       <div className="h-item mt-11 flex flex-wrap justify-center gap-4">
-        <a
-          href="#globe"
-          className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity"
+        <button
+          onClick={onBookCall}
+          className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
         >
-          View our work
+          Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-        </a>
-        <a
-          href="#services"
-          className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors"
+        </button>
+        <button
+          onClick={onRefer}
+          className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40"
         >
-          Our services
-        </a>
+          Refer someone
+        </button>
       </div>
     </section>
   );
@@ -766,7 +766,7 @@ function ReferralModal({ open, onClose }: { open: boolean; onClose: () => void }
 }
 
 /* ─── Refer Section ────────────────────────────────────────────── */
-function ReferSection() {
+function ReferSection({ onRefer }: { onRefer: () => void }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -795,13 +795,13 @@ function ReferSection() {
           <p className="text-[0.9rem] text-muted-foreground mb-10 max-w-lg mx-auto">
             If you know a business that needs help building software infrastructure they own, we'd love to hear about them. Let's start a conversation.
           </p>
-          <a
-            href="mailto:hello@nalarlabs.com?subject=Referral"
-            className="inline-flex items-center gap-2.5 bg-foreground text-background px-8 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity"
+          <button
+            onClick={onRefer}
+            className="inline-flex items-center gap-2.5 bg-foreground text-background px-8 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
           >
             Suggest a referral
             <ArrowRight size={14} />
-          </a>
+          </button>
         </div>
       </div>
     </section>
@@ -859,7 +859,7 @@ function TeamSection() {
 }
 
 /* ─── Contact ───────────────────────────────────────────────── */
-function ContactSection() {
+function ContactSection({ onBookCall }: { onBookCall: () => void }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -885,13 +885,13 @@ function ContactSection() {
         <h2 className="cta-item font-['Instrument_Serif',serif] text-[clamp(2.4rem,5vw,5rem)] leading-[1.08] mb-10">
           {"Let's build something extraordinary together"}
         </h2>
-        <a
-          href="mailto:hello@nalarlabs.com"
-          className="cta-item group inline-flex items-center gap-3 border border-white/25 px-11 py-4.5 text-[0.82rem] font-medium tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
+        <button
+          onClick={onBookCall}
+          className="cta-item group inline-flex items-center gap-3 border border-white/25 px-11 py-4.5 text-[0.82rem] font-medium tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/60"
         >
-          hello@nalarlabs.com
+          Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-        </a>
+        </button>
       </div>
     </section>
   );
@@ -916,18 +916,23 @@ function Footer() {
 
 /* ─── App ───────────────────────────────────────────────────── */
 export default function App() {
+  const [modal, setModal] = useState<null | "booking" | "referral">(null);
+  const closeModal = () => setModal(null);
+
   return (
     <main className="bg-[#fafaf8] min-h-screen overflow-x-hidden">
       <Nav />
-      <HeroSection />
+      <HeroSection onBookCall={() => setModal("booking")} onRefer={() => setModal("referral")} />
       <GlobeSection />
       <StatsBar />
       <ValuesSection />
       <ServicesSection />
-      <ReferSection />
+      <ReferSection onRefer={() => setModal("referral")} />
       <TeamSection />
-      <ContactSection />
+      <ContactSection onBookCall={() => setModal("booking")} />
       <Footer />
+      <BookingModal open={modal === "booking"} onClose={closeModal} />
+      <ReferralModal open={modal === "referral"} onClose={closeModal} />
     </main>
   );
 }
