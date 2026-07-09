@@ -398,6 +398,8 @@ function HeroSection() {
 /* ─── Globe section ─────────────────────────────────────────── */
 function GlobeSection() {
   const ref = useRef<HTMLElement>(null);
+  const globeRef = useRef<GlobeHandle>(null);
+  const [inGlobe, setInGlobe] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -412,12 +414,41 @@ function GlobeSection() {
     return () => ctx.revert();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && inGlobe) {
+        setInGlobe(false);
+        globeRef.current?.exit();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [inGlobe]);
+
+  const toggleGlobe = () => {
+    if (inGlobe) {
+      setInGlobe(false);
+      globeRef.current?.exit();
+    } else {
+      setInGlobe(true);
+      globeRef.current?.enter();
+    }
+  };
+
   return (
     <section id="globe" ref={ref} className="relative -mt-2 overflow-hidden">
+      <div className="text-center pt-2 mb-4">
+        <button
+          onClick={toggleGlobe}
+          className="inline-block mb-3 px-6 py-2 text-[0.75rem] font-semibold tracking-widest uppercase bg-black/5 hover:bg-black/10 transition-colors"
+        >
+          {inGlobe ? "← Exit the globe (or press Esc)" : "Step inside the globe"}
+        </button>
+      </div>
       <p className="globe-label text-center text-[0.68rem] font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-1 pt-2">
         Drag to explore · {PORTFOLIO.length} projects worldwide
       </p>
-      <Globe />
+      <Globe ref={globeRef} />
       {/* Fade-out gradient at bottom to suggest depth */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#fafaf8] to-transparent" />
     </section>
