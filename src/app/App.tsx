@@ -502,7 +502,7 @@ function GlobeSection() {
         {!inGlobe && (
           <button
             onClick={handleEnter}
-            className="absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2 text-[0.75rem] font-semibold tracking-widest uppercase bg-black/40 hover:bg-black/60 transition-colors text-white backdrop-blur-sm z-10"
+            className="absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-3 text-[0.75rem] font-semibold tracking-widest uppercase bg-black text-white hover:bg-foreground transition-colors rounded z-10 focus:outline-none focus:ring-2 focus:ring-white/60"
           >
             Step inside the globe
           </button>
