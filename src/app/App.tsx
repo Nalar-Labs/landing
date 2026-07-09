@@ -661,10 +661,10 @@ function ValuesSection() {
           {VALUES.map((v) => (
             <div key={v.belief} className="value-card">
               <div className="mb-6 pb-6 border-t-2 border-foreground/20" />
-              <h3 className="font-['Instrument_Serif',serif] text-lg italic leading-snug mb-4 text-foreground">
+              <h3 className="font-['Instrument_Serif',serif] text-[clamp(1.4rem,2.4vw,1.9rem)] italic leading-snug mb-4 text-foreground">
                 {v.belief}
               </h3>
-              <p className="text-[0.85rem] text-muted-foreground leading-relaxed">
+              <p className="text-[1.02rem] text-foreground/70 leading-[1.75]">
                 {v.desc}
               </p>
             </div>
