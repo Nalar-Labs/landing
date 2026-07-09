@@ -101,6 +101,7 @@ function fibPoints(n: number): THREE.Vector3[] {
 type GlobeHandle = {
   enter: () => void;
   exit: () => void;
+  setDepth: (depth: number) => void;
 };
 
 const Globe = forwardRef<GlobeHandle, {}>((_, ref) => {
@@ -110,7 +111,7 @@ const Globe = forwardRef<GlobeHandle, {}>((_, ref) => {
     inGlobe?: boolean;
   }>({});
 
-  useImperativeHandle(ref, () => ({
+useImperativeHandle(ref, () => ({
     enter: () => {
       const state = stateRef.current;
       if (!state.camera || state.inGlobe) return;
@@ -134,6 +135,13 @@ const Globe = forwardRef<GlobeHandle, {}>((_, ref) => {
         ease: "power2.inOut",
         overwrite: "auto",
       });
+    },
+    setDepth: (depth: number) => {
+      const state = stateRef.current;
+      if (!state.camera) return;
+      const newZ = Math.max(0.1, depth);
+      state.camera.position.z = newZ;
+      state.camera.updateProjectionMatrix();
     },
   }));
 
@@ -422,6 +430,10 @@ function GlobeSection() {
   const ref = useRef<HTMLElement>(null);
   const globeRef = useRef<GlobeHandle>(null);
   const [inGlobe, setInGlobe] = useState(false);
+  const [depth, setDepth] = useState(0);
+  const globeSectionRef = useRef<HTMLElement>(null);
+  const maxDepthRef = useRef(7.8);
+  const minDepthRef = useRef(0.1);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -437,45 +449,70 @@ function GlobeSection() {
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && inGlobe) {
-        setInGlobe(false);
-        globeRef.current?.exit();
-      }
+    if (!inGlobe) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const scrollDelta = e.deltaY;
+      
+      setDepth((prevDepth) => {
+        const newDepth = Math.max(
+          minDepthRef.current,
+          Math.min(maxDepthRef.current, prevDepth + scrollDelta * 0.01)
+        );
+
+        globeRef.current?.setDepth?.(newDepth);
+
+        if (newDepth >= maxDepthRef.current - 0.3) {
+          setInGlobe(false);
+          globeRef.current?.exit();
+          window.scrollTo({ top: globeSectionRef.current?.offsetTop || 0, behavior: 'smooth' });
+        }
+
+        return newDepth;
+      });
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
   }, [inGlobe]);
 
-  const toggleGlobe = () => {
-    if (inGlobe) {
-      setInGlobe(false);
-      globeRef.current?.exit();
-    } else {
-      setInGlobe(true);
-      globeRef.current?.enter();
-    }
+  const handleEnter = () => {
+    setInGlobe(true);
+    setDepth(maxDepthRef.current);
+    globeRef.current?.enter();
   };
 
   return (
-    <section id="globe" ref={ref} className="relative -mt-2 overflow-hidden">
-      <div className="text-center pt-2 mb-4">
-        <button
-          onClick={toggleGlobe}
-          className="inline-block mb-3 px-6 py-2 text-[0.75rem] font-semibold tracking-widest uppercase bg-black/5 hover:bg-black/10 transition-colors"
-        >
-          {inGlobe ? "← Exit the globe (or press Esc)" : "Step inside the globe"}
-        </button>
-      </div>
+    <section id="globe" ref={globeSectionRef} className="relative -mt-2 overflow-hidden">
       <p className="globe-label text-center text-[0.68rem] font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-1 pt-2">
         Drag to explore · {PORTFOLIO.length} projects worldwide
       </p>
-      <Globe ref={globeRef} />
-      {/* Fade-out gradient at bottom to suggest depth */}
+      
+      <div className="relative h-[720px]">
+        <Globe ref={globeRef} />
+        
+        {!inGlobe && (
+          <button
+            onClick={handleEnter}
+            className="absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2 text-[0.75rem] font-semibold tracking-widest uppercase bg-black/40 hover:bg-black/60 transition-colors text-white backdrop-blur-sm z-10"
+          >
+            Step inside the globe
+          </button>
+        )}
+        
+        {inGlobe && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[0.7rem] font-semibold tracking-widest uppercase text-muted-foreground bg-white/80 px-4 py-2 backdrop-blur-sm rounded z-10">
+            Scroll ↑ to go deeper · Scroll ↓ to exit
+          </div>
+        )}
+      </div>
+      
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#fafaf8] to-transparent" />
     </section>
   );
 }
+
 
 /* ─── Stats bar ─────────────────────────────────────────────── */
 function StatsBar() {
