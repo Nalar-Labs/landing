@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "re
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Copy, Check, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
+import { Modal } from "./components/Modal";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -67,6 +68,11 @@ const VALUES = [
   { belief: "We believe vendor lock-in is evil", desc: "We don't write contracts designed to keep you dependent on us. Our goal is to build your team's capability so you can eventually handle the basics yourselves — freeing us to work on your tougher and more interesting challenges together." },
   { belief: "We believe in your business", desc: "If you're at a stage where you can invest in technology, you already have a working business. You don't need us to validate that. You need the right infrastructure to scale it — and that's exactly what we focus on." },
 ];
+
+/* ─── Booking / referral ────────────────────────────────────── */
+// Single source of truth for booking (Calendly).
+const CALENDLY_URL = "https://calendly.com/garda4199/30min";
+const REFERRAL_URL = `${CALENDLY_URL}?utm_source=referral`;
 
 const STATS = [
   { value: "120+", label: "Clients Worldwide" },
@@ -672,6 +678,90 @@ function ValuesSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+/* ─── Copy-to-clipboard button ──────────────────────────────── */
+function CopyButton({ value, label, primary = false }: { value: string; label: string; primary?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = value;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
+  };
+
+  useEffect(() => () => { if (timeoutRef.current) window.clearTimeout(timeoutRef.current); }, []);
+
+  const base =
+    "inline-flex items-center justify-center gap-2 px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase transition-all focus:outline-none focus:ring-2 focus:ring-black/40";
+  const variant = primary
+    ? "bg-foreground text-background hover:opacity-80"
+    : "border border-foreground/20 hover:border-foreground/60";
+
+  return (
+    <button onClick={copy} className={`${base} ${variant}`} aria-live="polite">
+      {copied ? (<><Check size={15} /> Copied</>) : (<><Copy size={15} /> {label}</>)}
+    </button>
+  );
+}
+
+/* ─── Booking modal ─────────────────────────────────────────── */
+function BookingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Book a call">
+      <p className="text-[1rem] text-muted-foreground leading-relaxed mb-6">
+        Grab a 30-minute intro slot. We&apos;ll talk through where you are and whether we
+        can help — no pitch, no obligation.
+      </p>
+      <div className="flex flex-col gap-3">
+        <a
+          href={CALENDLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
+        >
+          Open Calendly <ArrowUpRight size={15} />
+        </a>
+        <CopyButton value={CALENDLY_URL} label="Copy booking link" />
+      </div>
+    </Modal>
+  );
+}
+
+/* ─── Referral modal ────────────────────────────────────────── */
+function ReferralModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Refer someone">
+      <p className="text-[1rem] text-muted-foreground leading-relaxed mb-6">
+        Know a business that should own their software instead of renting it? Copy this
+        link and send it their way — it opens our intro booking page.
+      </p>
+      <div className="flex flex-col gap-3">
+        <CopyButton value={REFERRAL_URL} label="Copy referral link" primary />
+        <a
+          href={REFERRAL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 border border-foreground/20 px-6 py-3.5 text-[0.8rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40"
+        >
+          Open Calendly <ArrowUpRight size={15} />
+        </a>
+      </div>
+    </Modal>
   );
 }
 
