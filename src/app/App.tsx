@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "re
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, ArrowUpRight, Copy, Check, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
+import { ArrowRight, Copy, Check, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
 import { Modal } from "./components/Modal";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -72,7 +72,6 @@ const VALUES = [
 /* ─── Booking / referral ────────────────────────────────────── */
 // Single source of truth for booking (Calendly).
 const CALENDLY_URL = "https://calendly.com/garda4199/30min";
-const REFERRAL_URL = `${CALENDLY_URL}?utm_source=referral`;
 
 const STATS = [
   { value: "120+", label: "Clients Worldwide" },
@@ -379,7 +378,7 @@ function Nav() {
 }
 
 /* ─── Hero ──────────────────────────────────────────────────── */
-function HeroSection({ onBookCall, onRefer }: { onBookCall: () => void; onRefer: () => void }) {
+function HeroSection({ onRefer }: { onRefer: () => void }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -413,13 +412,15 @@ function HeroSection({ onBookCall, onRefer }: { onBookCall: () => void; onRefer:
       </p>
 
       <div className="h-item mt-11 flex flex-wrap justify-center gap-4">
-        <button
-          onClick={onBookCall}
+        <a
+          href={CALENDLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
         >
           Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-        </button>
+        </a>
         <button
           onClick={onRefer}
           className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40"
@@ -719,47 +720,105 @@ function CopyButton({ value, label, primary = false }: { value: string; label: s
   );
 }
 
-/* ─── Booking modal ─────────────────────────────────────────── */
-function BookingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  return (
-    <Modal open={open} onClose={onClose} title="Book a call">
-      <p className="text-[1rem] text-muted-foreground leading-relaxed mb-6">
-        Grab a 30-minute intro slot. We&apos;ll talk through where you are and whether we
-        can help — no pitch, no obligation.
-      </p>
-      <div className="flex flex-col gap-3">
-        <a
-          href={CALENDLY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
-        >
-          Open Calendly <ArrowUpRight size={15} />
-        </a>
-        <CopyButton value={CALENDLY_URL} label="Copy booking link" />
-      </div>
-    </Modal>
-  );
-}
-
 /* ─── Referral modal ────────────────────────────────────────── */
+const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+
 function ReferralModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [referrerEmail, setReferrerEmail] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [touched, setTouched] = useState({ referrer: false, client: false });
+  const [generated, setGenerated] = useState<string | null>(null);
+
+  const referrerValid = isEmail(referrerEmail);
+  const clientValid = isEmail(clientEmail);
+  const canGenerate = referrerValid && clientValid;
+
+  useEffect(() => {
+    if (!open) {
+      setReferrerEmail("");
+      setClientEmail("");
+      setTouched({ referrer: false, client: false });
+      setGenerated(null);
+    }
+  }, [open]);
+
+  const generate = () => {
+    if (!canGenerate) return;
+    const url = new URL(CALENDLY_URL);
+    url.searchParams.set("email", clientEmail.trim());
+    url.searchParams.set("utm_source", "referral");
+    url.searchParams.set("utm_content", referrerEmail.trim());
+    setGenerated(url.toString());
+  };
+
+  const inputClass =
+    "w-full border border-foreground/20 bg-white/70 px-4 py-3 text-[0.95rem] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-black/40";
+
   return (
     <Modal open={open} onClose={onClose} title="Refer someone">
       <p className="text-[1rem] text-muted-foreground leading-relaxed mb-6">
-        Know a business that should own their software instead of renting it? Copy this
-        link and send it their way — it opens our intro booking page.
+        Add your details and your contact&apos;s, and we&apos;ll generate a booking link
+        to share. We use your email to credit you when it turns into a project.
       </p>
-      <div className="flex flex-col gap-3">
-        <CopyButton value={REFERRAL_URL} label="Copy referral link" primary />
-        <a
-          href={REFERRAL_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 border border-foreground/20 px-6 py-3.5 text-[0.8rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40"
-        >
-          Open Calendly <ArrowUpRight size={15} />
-        </a>
+      <div className="flex flex-col gap-4">
+        <div>
+          <label
+            htmlFor="referrer-email"
+            className="block text-[0.72rem] font-semibold tracking-widest uppercase text-muted-foreground mb-2"
+          >
+            Your email
+          </label>
+          <input
+            id="referrer-email"
+            type="email"
+            autoComplete="email"
+            value={referrerEmail}
+            onChange={(e) => { setReferrerEmail(e.target.value); setGenerated(null); }}
+            onBlur={() => setTouched((t) => ({ ...t, referrer: true }))}
+            placeholder="you@company.com"
+            className={inputClass}
+          />
+          {touched.referrer && referrerEmail.trim() !== "" && !referrerValid && (
+            <p className="mt-1.5 text-[0.75rem] text-[#dc2626]">Enter a valid email address.</p>
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="client-email"
+            className="block text-[0.72rem] font-semibold tracking-widest uppercase text-muted-foreground mb-2"
+          >
+            Their email
+          </label>
+          <input
+            id="client-email"
+            type="email"
+            value={clientEmail}
+            onChange={(e) => { setClientEmail(e.target.value); setGenerated(null); }}
+            onBlur={() => setTouched((t) => ({ ...t, client: true }))}
+            placeholder="client@business.com"
+            className={inputClass}
+          />
+          {touched.client && clientEmail.trim() !== "" && !clientValid && (
+            <p className="mt-1.5 text-[0.75rem] text-[#dc2626]">Enter a valid email address.</p>
+          )}
+        </div>
+
+        {generated ? (
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="text-[0.8rem] text-foreground/70 break-all border border-foreground/10 bg-white/70 px-4 py-3 leading-relaxed">
+              {generated}
+            </div>
+            <CopyButton value={generated} label="Copy referral link" primary />
+          </div>
+        ) : (
+          <button
+            onClick={generate}
+            disabled={!canGenerate}
+            className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:opacity-80"
+          >
+            Generate referral link
+          </button>
+        )}
       </div>
     </Modal>
   );
@@ -859,7 +918,7 @@ function TeamSection() {
 }
 
 /* ─── Contact ───────────────────────────────────────────────── */
-function ContactSection({ onBookCall }: { onBookCall: () => void }) {
+function ContactSection() {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -885,13 +944,15 @@ function ContactSection({ onBookCall }: { onBookCall: () => void }) {
         <h2 className="cta-item font-['Instrument_Serif',serif] text-[clamp(2.4rem,5vw,5rem)] leading-[1.08] mb-10">
           {"Let's build something extraordinary together"}
         </h2>
-        <button
-          onClick={onBookCall}
+        <a
+          href={CALENDLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="cta-item group inline-flex items-center gap-3 border border-white/25 px-11 py-4.5 text-[0.82rem] font-medium tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/60"
         >
           Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-        </button>
+        </a>
       </div>
     </section>
   );
@@ -916,23 +977,21 @@ function Footer() {
 
 /* ─── App ───────────────────────────────────────────────────── */
 export default function App() {
-  const [modal, setModal] = useState<null | "booking" | "referral">(null);
-  const closeModal = () => setModal(null);
+  const [referOpen, setReferOpen] = useState(false);
 
   return (
     <main className="bg-[#fafaf8] min-h-screen overflow-x-hidden">
       <Nav />
-      <HeroSection onBookCall={() => setModal("booking")} onRefer={() => setModal("referral")} />
+      <HeroSection onRefer={() => setReferOpen(true)} />
       <GlobeSection />
       <StatsBar />
       <ValuesSection />
       <ServicesSection />
-      <ReferSection onRefer={() => setModal("referral")} />
+      <ReferSection onRefer={() => setReferOpen(true)} />
       <TeamSection />
-      <ContactSection onBookCall={() => setModal("booking")} />
+      <ContactSection />
       <Footer />
-      <BookingModal open={modal === "booking"} onClose={closeModal} />
-      <ReferralModal open={modal === "referral"} onClose={closeModal} />
+      <ReferralModal open={referOpen} onClose={() => setReferOpen(false)} />
     </main>
   );
 }

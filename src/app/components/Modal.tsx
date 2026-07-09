@@ -17,20 +17,22 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
     previouslyFocused.current = document.activeElement as HTMLElement | null;
 
+    const FOCUSABLE = 'a[href], button:not([disabled]), input, textarea, [tabindex]:not([tabindex="-1"])';
     const panel = panelRef.current;
-    const focusables = panel?.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), input, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    focusables?.[0]?.focus();
+    panel?.querySelectorAll<HTMLElement>(FOCUSABLE)[0]?.focus();
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
         return;
       }
-      if (e.key === "Tab" && focusables && focusables.length > 0) {
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
+      if (e.key === "Tab") {
+        // Re-query each time — the panel's focusable set can change (e.g. a
+        // disabled button becoming enabled, or new controls appearing).
+        const nodes = panel?.querySelectorAll<HTMLElement>(FOCUSABLE);
+        if (!nodes || nodes.length === 0) return;
+        const first = nodes[0];
+        const last = nodes[nodes.length - 1];
         if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
           last.focus();

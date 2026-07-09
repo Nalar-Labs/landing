@@ -640,6 +640,8 @@ Expected: refs updated on `origin/main`.
 ## Notes / Open Items (surface at review, not blockers)
 
 1. **Calendly URL is set** to `https://calendly.com/garda4199/30min` (the real link). Everything — booking + referral — flows from this single `CALENDLY_URL` constant, so future changes are one line.
-2. **Referral modal is copy-link only** (per the chosen approach): no email fields, no automated sending, no backend. If referral *attribution* becomes important later (e.g. to track the 10%/30% commission), the low-cost next step is an optional "Your email" field that appends `&utm_content=<email>` to the referral link — deliberately left out here to keep the flow simple.
+2. **Revised after first pass (2026-07-09):**
+   - **"Book a call" now redirects straight to Calendly** (both hero and Contact CTAs are direct `target="_blank"` links) — no intermediate modal. The `BookingModal` was removed.
+   - **The referral modal is now a two-email form:** "Your email" (referrer, for credit) + "Their email" (the prospect). The "Generate referral link" button stays disabled/greyed until both are valid emails. Generating builds `CALENDLY_URL?email=<prospect>&utm_source=referral&utm_content=<referrer>`, so Calendly prefills the prospect's email and records the referrer in `utm_content`. A copy button appears after generation. No backend; still copy-only sharing.
 3. **Nav "Contact Us" pill is unchanged** — it still anchor-scrolls to the Contact section, whose button now opens the booking modal. If you'd prefer the nav pill to open the modal directly, that's a trivial follow-up.
 4. **Fabricated content** (stats, team, "120+ clients") remains untouched, consistent with the prior plan's scope boundary.
