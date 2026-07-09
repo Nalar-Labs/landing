@@ -62,6 +62,12 @@ const APPROACH_STEPS = [
   { num: "3", phase: "Training & Handoff", desc: "Structured training sessions so your team can maintain and extend the work independently." },
 ];
 
+const VALUES = [
+  { belief: "We believe open source is awesome", desc: "SaaS tools rent you access to code you'll never own. Open-source alternatives are often better, always yours, and free forever. Our default is open source — and we'll show you what that unlocks." },
+  { belief: "We believe vendor lock-in is evil", desc: "We don't write contracts designed to keep you dependent on us. Our goal is to build your team's capability so you can eventually handle the basics yourselves — freeing us to work on your tougher and more interesting challenges together." },
+  { belief: "We believe in your business", desc: "If you're at a stage where you can invest in technology, you already have a working business. You don't need us to validate that. You need the right infrastructure to scale it — and that's exactly what we focus on." },
+];
+
 const STATS = [
   { value: "120+", label: "Clients Worldwide" },
   { value: "98%", label: "Client Retention" },
@@ -584,6 +590,54 @@ function ServicesSection() {
   );
 }
 
+/* ─── Values Section ───────────────────────────────────────────── */
+function ValuesSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".value-card", {
+        opacity: 0,
+        y: 28,
+        duration: 0.7,
+        ease: "power2.out",
+        stagger: 0.1,
+        scrollTrigger: { trigger: ref.current, start: "top 80%" },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="values" ref={ref} className="py-28 px-6 bg-white/40">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-18">
+          <p className="text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-4">
+            Our philosophy
+          </p>
+          <h2 className="font-['Instrument_Serif',serif] text-[clamp(2rem,4vw,3.6rem)] leading-[1.1] max-w-3xl">
+            Why we do this
+          </h2>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {VALUES.map((v) => (
+            <div key={v.belief} className="value-card">
+              <div className="mb-6 pb-6 border-t-2 border-foreground/20" />
+              <h3 className="font-['Instrument_Serif',serif] text-lg italic leading-snug mb-4 text-foreground">
+                {v.belief}
+              </h3>
+              <p className="text-[0.85rem] text-muted-foreground leading-relaxed">
+                {v.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Refer Section ────────────────────────────────────────────── */
 function ReferSection() {
   const ref = useRef<HTMLElement>(null);
@@ -741,6 +795,7 @@ export default function App() {
       <HeroSection />
       <GlobeSection />
       <StatsBar />
+      <ValuesSection />
       <ServicesSection />
       <ReferSection />
       <TeamSection />
