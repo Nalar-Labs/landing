@@ -416,14 +416,14 @@ function HeroSection({ onRefer }: { onRefer: () => void }) {
           href={CALENDLY_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
+          className="group inline-flex items-center gap-2.5 bg-foreground text-background px-9 py-4 text-[0.82rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
         >
           Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </a>
         <button
           onClick={onRefer}
-          className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40"
+          className="inline-flex items-center border border-foreground/20 px-9 py-4 text-[0.82rem] font-medium tracking-widest uppercase hover:border-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
         >
           Refer someone
         </button>
@@ -708,7 +708,7 @@ function CopyButton({ value, label, primary = false }: { value: string; label: s
   useEffect(() => () => { if (timeoutRef.current) window.clearTimeout(timeoutRef.current); }, []);
 
   const base =
-    "inline-flex items-center justify-center gap-2 px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase transition-all focus:outline-none focus:ring-2 focus:ring-black/40";
+    "inline-flex items-center justify-center gap-2 px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase transition-all focus:outline-none focus:ring-2 focus:ring-black/40 btn-press";
   const variant = primary
     ? "bg-foreground text-background hover:opacity-80"
     : "border border-foreground/20 hover:border-foreground/60";
@@ -814,7 +814,7 @@ function ReferralModal({ open, onClose }: { open: boolean; onClose: () => void }
           <button
             onClick={generate}
             disabled={!canGenerate}
-            className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:opacity-80"
+            className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:opacity-80 btn-press"
           >
             Generate referral link
           </button>
@@ -856,7 +856,7 @@ function ReferSection({ onRefer }: { onRefer: () => void }) {
           </p>
           <button
             onClick={onRefer}
-            className="inline-flex items-center gap-2.5 bg-foreground text-background px-8 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40"
+            className="inline-flex items-center gap-2.5 bg-foreground text-background px-8 py-3.5 text-[0.8rem] font-semibold tracking-widest uppercase hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-black/40 btn-press"
           >
             Suggest a referral
             <ArrowRight size={14} />
@@ -948,7 +948,7 @@ function ContactSection() {
           href={CALENDLY_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="cta-item group inline-flex items-center gap-3 border border-white/25 px-11 py-4.5 text-[0.82rem] font-medium tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/60"
+          className="cta-item group inline-flex items-center gap-3 border border-white/25 px-11 py-4.5 text-[0.82rem] font-medium tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/60 btn-press"
         >
           Book a call
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
