@@ -37,13 +37,29 @@ const PORTFOLIO = [
   { img: "1571019613454-1cb2f99b2d8b", title: "Health Tech", client: "Vitals AI" },
 ];
 
-const SERVICES = [
-  { icon: Layers, name: "AI Product Design", desc: "Craft intuitive AI-native experiences from zero to launch." },
-  { icon: Code2, name: "Engineering & Dev", desc: "Full-stack AI systems designed to perform and scale." },
-  { icon: Palette, name: "Brand Identity", desc: "Visual systems built to resonate in the AI era." },
-  { icon: Microscope, name: "UX Research", desc: "Evidence-based design that puts real users first." },
-  { icon: Cpu, name: "AI Integration", desc: "Embedding intelligence into your existing workflows." },
-  { icon: FlaskConical, name: "Design Systems", desc: "Scalable, composable component architectures." },
+const SERVICE_GROUPS = [
+  {
+    title: "Consulting Service",
+    items: [
+      { icon: Layers, name: "AI Strategy & Implementation Roadmap", desc: "Plan where AI fits in your business, what to build, in what order, and how to measure success." },
+      { icon: Code2, name: "Vibe-to-Production", desc: "Help turn prototype projects into clean, production-ready applications." },
+      { icon: Palette, name: "Technical Cost Optimisation", desc: "Audit your current systems and recommend ways to reduce infrastructure, tooling, and operational costs." },
+    ],
+  },
+  {
+    title: "End-to-End Implementation Service",
+    items: [
+      { icon: Microscope, name: "Internal Tool Building", desc: "Migrate your team off paid SaaS subscriptions and replace them with custom in-house tools you own." },
+      { icon: Cpu, name: "External Product Development", desc: "Build customer-facing products architected to scale to millions of users." },
+      { icon: FlaskConical, name: "Agentic Deployment", desc: "Design and deploy AI agents that automate workflows across your business." },
+    ],
+  },
+];
+
+const APPROACH_STEPS = [
+  { num: "1", phase: "Discovery & Scoping", desc: "Three structured sessions to understand your needs, assess fit, and plan in detail." },
+  { num: "2", phase: "Project Execution", desc: "Focused sprints with regular check-ins, documented deliverables, and open-source tools." },
+  { num: "3", phase: "Training & Handoff", desc: "Structured training sessions so your team can maintain and extend the work independently." },
 ];
 
 const STATS = [
@@ -505,6 +521,14 @@ function ServicesSection() {
         stagger: 0.08,
         scrollTrigger: { trigger: ref.current, start: "top 78%" },
       });
+      gsap.from(".approach-step", {
+        opacity: 0,
+        y: 24,
+        duration: 0.6,
+        ease: "power2.out",
+        stagger: 0.1,
+        scrollTrigger: { trigger: ref.current, start: "top 70%" },
+      });
     }, ref);
     return () => ctx.revert();
   }, []);
@@ -514,27 +538,46 @@ function ServicesSection() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-18">
           <p className="text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-muted-foreground mb-4">
-            What we do
+            How we help
           </p>
-          <h2 className="font-['Instrument_Serif',serif] text-[clamp(2rem,4vw,3.6rem)] leading-[1.1] max-w-lg">
-            Services built for the intelligence age
+          <h2 className="font-['Instrument_Serif',serif] text-[clamp(2rem,4vw,3.6rem)] leading-[1.1] max-w-2xl">
+            Two ways to work together
           </h2>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
-          {SERVICES.map((s) => (
-            <div
-              key={s.name}
-              className="svc-card group bg-[#fafaf8] p-9 hover:bg-white transition-colors duration-200"
-            >
-              <s.icon size={20} className="text-muted-foreground mb-7" strokeWidth={1.5} />
-              <h3 className="font-['Instrument_Serif',serif] text-xl mb-3 text-foreground">{s.name}</h3>
-              <p className="text-[0.83rem] text-muted-foreground leading-relaxed">{s.desc}</p>
-              <div className="mt-7 flex items-center gap-2 text-[0.78rem] font-semibold tracking-wide opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all duration-200">
-                Learn more <ArrowRight size={13} />
+        {/* Service Groups */}
+        <div className="mt-16 space-y-16">
+          {SERVICE_GROUPS.map((group) => (
+            <div key={group.title}>
+              <h3 className="font-['Instrument_Serif',serif] text-2xl mb-8 text-foreground">{group.title}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
+                {group.items.map((s) => (
+                  <div
+                    key={s.name}
+                    className="svc-card bg-[#fafaf8] p-9 hover:bg-white transition-colors duration-200"
+                  >
+                    <s.icon size={20} className="text-muted-foreground mb-7" strokeWidth={1.5} />
+                    <h4 className="font-['Instrument_Serif',serif] text-lg mb-3 text-foreground">{s.name}</h4>
+                    <p className="text-[0.83rem] text-muted-foreground leading-relaxed">{s.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Approach Steps */}
+        <div className="mt-20 pt-16 border-t border-border">
+          <h3 className="font-['Instrument_Serif',serif] text-2xl mb-12 text-foreground">Our approach</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {APPROACH_STEPS.map((step) => (
+              <div key={step.phase} className="approach-step">
+                <div className="text-4xl font-['Instrument_Serif',serif] text-muted-foreground/40 mb-4">{step.num}</div>
+                <h4 className="font-['Instrument_Serif',serif] text-lg mb-3 text-foreground">{step.phase}</h4>
+                <p className="text-[0.83rem] text-muted-foreground leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
