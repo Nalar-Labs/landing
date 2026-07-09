@@ -4,6 +4,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight, Copy, Check, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
 import { Modal } from "./components/Modal";
+import { Cursor } from "./components/Cursor";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -981,6 +982,7 @@ export default function App() {
 
   return (
     <main className="bg-[#fafaf8] min-h-screen overflow-x-hidden">
+      <Cursor />
       <Nav />
       <HeroSection onRefer={() => setReferOpen(true)} />
       <GlobeSection />
