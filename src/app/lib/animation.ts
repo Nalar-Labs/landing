@@ -1,3 +1,5 @@
+import { gsap } from "gsap";
+
 /**
  * Splits an element's text into per-word masked spans for staggered reveals.
  * Returns the inner spans (the animation targets).
@@ -25,4 +27,16 @@ export function splitWords(el: HTMLElement): HTMLElement[] {
     inners.push(inner);
   });
   return inners;
+}
+
+/** Masked word rise for section headings, triggered once on scroll into view. */
+export function wordRevealOnScroll(heading: HTMLElement, trigger: Element): void {
+  const words = splitWords(heading);
+  gsap.from(words, {
+    yPercent: 120,
+    duration: 0.85,
+    ease: "power3.out",
+    stagger: 0.04,
+    scrollTrigger: { trigger, start: "top 80%", once: true },
+  });
 }

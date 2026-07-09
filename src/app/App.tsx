@@ -5,7 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight, Copy, Check, Menu, X, Layers, Code2, Palette, Cpu, FlaskConical, Microscope } from "lucide-react";
 import { Modal } from "./components/Modal";
 import { Cursor } from "./components/Cursor";
-import { splitWords } from "./lib/animation";
+import { splitWords, wordRevealOnScroll } from "./lib/animation";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -76,10 +76,10 @@ const VALUES = [
 const CALENDLY_URL = "https://calendly.com/garda4199/30min";
 
 const STATS = [
-  { value: "120+", label: "Clients Worldwide" },
-  { value: "98%", label: "Client Retention" },
-  { value: "$2.4B", label: "Revenue Generated" },
-  { value: "8 yrs", label: "Industry Experience" },
+  { prefix: "", num: 120, decimals: 0, suffix: "+", label: "Clients Worldwide" },
+  { prefix: "", num: 98, decimals: 0, suffix: "%", label: "Client Retention" },
+  { prefix: "$", num: 2.4, decimals: 1, suffix: "B", label: "Revenue Generated" },
+  { prefix: "", num: 8, decimals: 0, suffix: " yrs", label: "Industry Experience" },
 ];
 
 const TEAM = [
@@ -533,7 +533,8 @@ function StatsBar() {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia(ref);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
       gsap.from(".stat-item", {
         opacity: 0,
         y: 24,
@@ -542,8 +543,24 @@ function StatsBar() {
         stagger: 0.1,
         scrollTrigger: { trigger: ref.current, start: "top 85%" },
       });
-    }, ref);
-    return () => ctx.revert();
+      gsap.utils.toArray<HTMLElement>(".stat-num").forEach((el) => {
+        const num = parseFloat(el.dataset.num ?? "0");
+        const decimals = parseInt(el.dataset.decimals ?? "0", 10);
+        const prefix = el.dataset.prefix ?? "";
+        const suffix = el.dataset.suffix ?? "";
+        const counter = { v: 0 };
+        gsap.to(counter, {
+          v: num,
+          duration: 1.6,
+          ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          onUpdate: () => {
+            el.textContent = prefix + counter.v.toFixed(decimals) + suffix;
+          },
+        });
+      });
+    });
+    return () => mm.revert();
   }, []);
 
   return (
@@ -551,8 +568,14 @@ function StatsBar() {
       <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
         {STATS.map((s) => (
           <div key={s.label} className="stat-item text-center">
-            <div className="font-['Instrument_Serif',serif] text-[clamp(2.4rem,4vw,4rem)] leading-none text-foreground">
-              {s.value}
+            <div
+              className="stat-num font-['Instrument_Serif',serif] text-[clamp(2.4rem,4vw,4rem)] leading-none text-foreground tabular-nums"
+              data-num={s.num}
+              data-decimals={s.decimals}
+              data-prefix={s.prefix}
+              data-suffix={s.suffix}
+            >
+              {s.prefix}{s.num}{s.suffix}
             </div>
             <div className="mt-2.5 text-[0.67rem] font-semibold tracking-[0.22em] uppercase text-muted-foreground">
               {s.label}
@@ -569,7 +592,10 @@ function ServicesSection() {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia(ref);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const h2 = ref.current?.querySelector("h2");
+      if (h2 && ref.current) wordRevealOnScroll(h2 as HTMLElement, ref.current);
       gsap.from(".svc-card", {
         opacity: 0,
         y: 30,
@@ -586,8 +612,8 @@ function ServicesSection() {
         stagger: 0.1,
         scrollTrigger: { trigger: ref.current, start: "top 70%" },
       });
-    }, ref);
-    return () => ctx.revert();
+    });
+    return () => mm.revert();
   }, []);
 
   return (
@@ -646,7 +672,10 @@ function ValuesSection() {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia(ref);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const h2 = ref.current?.querySelector("h2");
+      if (h2 && ref.current) wordRevealOnScroll(h2 as HTMLElement, ref.current);
       gsap.from(".value-card", {
         opacity: 0,
         y: 28,
@@ -655,8 +684,8 @@ function ValuesSection() {
         stagger: 0.1,
         scrollTrigger: { trigger: ref.current, start: "top 80%" },
       });
-    }, ref);
-    return () => ctx.revert();
+    });
+    return () => mm.revert();
   }, []);
 
   return (
@@ -836,7 +865,8 @@ function ReferSection({ onRefer }: { onRefer: () => void }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia(ref);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
       gsap.from(".refer-cta", {
         opacity: 0,
         y: 20,
@@ -844,8 +874,8 @@ function ReferSection({ onRefer }: { onRefer: () => void }) {
         ease: "power2.out",
         scrollTrigger: { trigger: ref.current, start: "top 80%" },
       });
-    }, ref);
-    return () => ctx.revert();
+    });
+    return () => mm.revert();
   }, []);
 
   return (
@@ -929,17 +959,21 @@ function ContactSection() {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia(ref);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const h2 = ref.current?.querySelector("h2");
+      if (h2 && ref.current) wordRevealOnScroll(h2 as HTMLElement, ref.current);
       gsap.from(".cta-item", {
         opacity: 0,
         y: 30,
         duration: 0.9,
         ease: "power3.out",
         stagger: 0.12,
+        clearProps: "all",
         scrollTrigger: { trigger: ref.current, start: "top 80%" },
       });
-    }, ref);
-    return () => ctx.revert();
+    });
+    return () => mm.revert();
   }, []);
 
   return (
@@ -948,7 +982,7 @@ function ContactSection() {
         <p className="cta-item text-[0.7rem] font-semibold tracking-[0.28em] uppercase text-white/40 mb-7">
           Work with us
         </p>
-        <h2 className="cta-item font-['Instrument_Serif',serif] text-[clamp(2.4rem,5vw,5rem)] leading-[1.08] mb-10">
+        <h2 className="font-['Instrument_Serif',serif] text-[clamp(2.4rem,5vw,5rem)] leading-[1.08] mb-10">
           {"Let's build something extraordinary together"}
         </h2>
         <a
